@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
-import { activateCard, blockCard, newCard, unlockCard } from "../services/cardsServices.js";
-import { newPurchaseCard } from "../services/purchasesServices.js";
-import { newRechargeCard } from "../services/rechargesServices.js";
+import { findById } from "../repositories/cardRepository.js";
+import { activateCard, blockCard, getTransactions, newCard, unlockCard } from "../services/cardsServices.js";
+
 
 export async function card(req: Request, res: Response) {
 
@@ -19,27 +19,46 @@ export async function activate(req: Request, res: Response) {
 
     try {
 
-        const status = await activateCard(idCard, securityCode, password);
-        res.sendStatus(status);
+        await activateCard(idCard, securityCode, password);
         
     } catch (error) {
         res.sendStatus(500);
     }
 
+    res.sendStatus(200);
+
 
 }
+
+export async function transactions(req: Request, res: Response) {
+    const { idCard } = req.body;
+
+    try {
+
+        const card = await findById(idCard);
+        if(!card) return res.sendStatus(404);
+
+        const transactions = await getTransactions(idCard);
+        res.send(transactions);
+        
+    } catch (error) {
+        res.sendStatus(500);
+    }
+}
+
 
 export async function block(req: Request, res: Response) {
     const { idCard, password } = req.body;
 
     try {
 
-        const status = await blockCard(idCard, password);
-        res.sendStatus(status);
+        await blockCard(idCard, password);
         
     } catch (error) {
         res.sendStatus(500);
     }
+
+    res.sendStatus(200);
 
 }
 
@@ -48,11 +67,12 @@ export async function unlock(req: Request, res: Response) {
 
     try {
 
-        const status = await unlockCard(idCard, password);
-        res.sendStatus(status);
+        await unlockCard(idCard, password);
         
     } catch (error) {
         res.sendStatus(500);
     }
+
+    res.sendStatus(200);
 
 }

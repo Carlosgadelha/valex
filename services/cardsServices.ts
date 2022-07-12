@@ -11,7 +11,7 @@ import { faker } from '@faker-js/faker';
 import { findByCardId, insertRecharge } from "../repositories/rechargeRepository.js";
 import { findByIdBusiness } from "../repositories/businessRepository.js";
 import { saldo } from "../utils/totalAmount.js";
-import { insertPayment } from "../repositories/paymentRepository.js";
+import { findByCardIdPayment, insertPayment } from "../repositories/paymentRepository.js";
 
 function cardName(name: string) {
     const fullName = name.split(' ');
@@ -77,13 +77,6 @@ export async function newCard(apiKey: string, employeeId: number, type: Transact
 export async function activateCard(cardId: number, securityCode: number, password: number) {
 
     const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
-    const isCard = await findById(cardId) // se tem um cartão com esse id
-
-    if (!isCard) return 404;
-    if (isCard.expirationDate <= dayjs(Date.now()).format('MM/YY')) return 409; // se nao esta vencido
-    if(isCard.password) return 409; // cartao ja com senha
-    
-    if(parseInt(cryptr.decrypt(isCard.securityCode)) !== securityCode ) return 409; // codico de segurança invalida
     
     // falta validação da senha com o join
 
@@ -91,35 +84,31 @@ export async function activateCard(cardId: number, securityCode: number, passwor
         password: cryptr.encrypt(password)
     })
 
-    return 200;
+}
+
+export async function getTransactions(cardId: number) {
+    const transactions = await findByCardIdPayment(cardId);
+    const balance = saldo(cardId);
+    const recharges = await findByCardId(cardId);
+    return {
+        balance,
+        transactions,
+        recharges
+    };
 }
 
 export async function blockCard(cardId: number, password: number) {
-    const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
-    const isCard = await findById(cardId) 
-    
-    if (isCard.isBlocked) return 409; 
-    if (password !== parseInt(cryptr.decrypt(isCard.password))) return 409; 
 
     await update(cardId, {
         isBlocked: true
     })
 
-    return 200;
-
 }
 
 export async function unlockCard(cardId: number, password: number) {
-    const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
-    const isCard = await findById(cardId) 
-    if (!isCard.isBlocked) return 409;
-     
-    if (password !== parseInt(cryptr.decrypt(isCard.password))) return 409; 
 
     await update(cardId, {
         isBlocked: false
     })
-
-    return 200;
 
 }
