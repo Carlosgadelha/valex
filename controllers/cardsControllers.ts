@@ -1,9 +1,7 @@
-import dayjs from "dayjs";
-// import  join from "join";
 import { Request, Response } from "express";
-import { findById, update } from "../repositories/cardRepository.js";
-import { activateCard, newCard, newPurchaseCard, newRechargeCard } from "../services/cardsServices.js";
-import Cryptr from 'cryptr';
+import { activateCard, blockCard, newCard, unlockCard } from "../services/cardsServices.js";
+import { newPurchaseCard } from "../services/purchasesServices.js";
+import { newRechargeCard } from "../services/rechargesServices.js";
 
 export async function card(req: Request, res: Response) {
 
@@ -31,14 +29,12 @@ export async function activate(req: Request, res: Response) {
 
 }
 
-export async function rechargeCard(req: Request, res: Response) {
-    
-    const apiKey = req.headers['x-api-key'].toString();
-    const {idCard, value} = req.body;
+export async function block(req: Request, res: Response) {
+    const { idCard, password } = req.body;
 
     try {
-        
-        const status = await newRechargeCard(apiKey, idCard, value);
+
+        const status = await blockCard(idCard, password);
         res.sendStatus(status);
         
     } catch (error) {
@@ -47,12 +43,12 @@ export async function rechargeCard(req: Request, res: Response) {
 
 }
 
-export async function newPurchase(req: Request, res: Response) {
-    const {cardId, password, businessId, amount} = req.body;
+export async function unlock(req: Request, res: Response) {
+    const { idCard, password } = req.body;
 
     try {
-        
-        const status = await newPurchaseCard(cardId, password, businessId, amount);
+
+        const status = await unlockCard(idCard, password);
         res.sendStatus(status);
         
     } catch (error) {

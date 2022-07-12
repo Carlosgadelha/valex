@@ -94,44 +94,30 @@ export async function activateCard(cardId: number, securityCode: number, passwor
     return 200;
 }
 
-export async function newRechargeCard(apiKey: string, cardId: number, amount: number) {
-    const company = await findByApiKey(apiKey);
-    const card = await findById(cardId);
+export async function blockCard(cardId: number, password: number) {
+    const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
+    const isCard = await findById(cardId) 
+    
+    if (isCard.isBlocked) return 409; 
+    if (password !== parseInt(cryptr.decrypt(isCard.password))) return 409; 
 
-    if(amount < 0) return 409;
-    if (!company) return 404;
-    if (!card) return 404;
-    if (card.isBlocked) return 409;
-    if (card.expirationDate <= dayjs(Date.now()).format('MM/YY')) return 409; // se nao esta vencido
-
-    await insertRecharge({
-        cardId,
-        amount
+    await update(cardId, {
+        isBlocked: true
     })
 
     return 200;
+
 }
 
-export async function newPurchaseCard(cardId: number, password: number, businessId: number, amount: number){
-
+export async function unlockCard(cardId: number, password: number) {
     const cryptr = new Cryptr(process.env.CRYPTR_SECRET);
-    const card = await findById(cardId);
-    const business = await findByIdBusiness(businessId);
+    const isCard = await findById(cardId) 
+    if (!isCard.isBlocked) return 409;
+     
+    if (password !== parseInt(cryptr.decrypt(isCard.password))) return 409; 
 
-    if (amount < 0) return 409;
-    if (!card) return 404;
-    if (card.isBlocked) return 409;
-    if (card.expirationDate <= dayjs(Date.now()).format('MM/YY')) return 409; // se nao esta vencido
-    if (parseInt(cryptr.decrypt(card.password)) !== password ) return 409; // codico de segurança invalida
-    if (!business) return 404;
-    if (business.type !== card.type) return 409;
-    const saldoCard = await saldo(cardId);
-    if (saldoCard < amount) return 409;
-
-    await insertPayment({
-        cardId,
-        businessId,
-        amount
+    await update(cardId, {
+        isBlocked: false
     })
 
     return 200;
