@@ -17,7 +17,7 @@ export async function findByCardId(cardId: number) {
   return result.rows;
 }
 
-export async function insert(rechargeData: RechargeInsertData) {
+export async function insertRecharge(rechargeData: RechargeInsertData) {
   const { cardId, amount } = rechargeData;
 
   connection.query<any, [number, number]>(

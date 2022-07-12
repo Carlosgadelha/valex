@@ -8,7 +8,7 @@ export interface Employee {
   companyId: number;
 }
 
-export async function findById(id: number) {
+export async function findByIdEmployee(id: number) {
   const result = await connection.query<Employee, [number]>(
     "SELECT * FROM employees WHERE id=$1",
     [id]

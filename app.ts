@@ -1,7 +1,7 @@
 import express, { json } from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { card } from "./controllers/cardsControllers.js";
+import cardRouter from "./routers/cardRouter.js";
 dotenv.config();
 
 const app = express();
@@ -9,8 +9,7 @@ const app = express();
 app.use(express.json());
 app.use(cors())
 
-app.post("/card", card);
-
+app.use(cardRouter);
 
 const PORT = process.env.PORT || 3000;
 
